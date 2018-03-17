@@ -1,10 +1,18 @@
 module Main exposing (main)
 
 import Html exposing (Html)
+import Element
+import Collage
+import Color
+
+
+type Feet
+    = Feet Int
 
 
 type alias Model =
-    {}
+    { riverWidth : Feet
+    }
 
 
 type Msg
@@ -13,7 +21,7 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { riverWidth = Feet 30 }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -21,9 +29,40 @@ update msg model =
     ( model, Cmd.none )
 
 
+type Pixels
+    = Pixels Int
+
+
+pixelsPerFoot : Int
+pixelsPerFoot =
+    6
+
+
+feetToPixels : Feet -> Pixels
+feetToPixels (Feet ft) =
+    Pixels (ft * pixelsPerFoot)
+
+
+background : Collage.Form
+background =
+    Collage.rect 800 500
+        |> Collage.filled Color.green
+
+
+river : Feet -> Collage.Form
+river feet =
+    let
+        (Pixels width) =
+            feetToPixels feet
+    in
+        Collage.rect 800 (toFloat width)
+            |> Collage.filled Color.blue
+
+
 view : Model -> Html a
 view model =
-    Html.text "hello world"
+    Collage.collage 800 500 [ background, river model.riverWidth ]
+        |> Element.toHtml
 
 
 subscriptions : Model -> Sub Msg
