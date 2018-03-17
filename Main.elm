@@ -29,6 +29,7 @@ toScreen (WorldCoordinate vector) =
 type alias Model =
     { riverWidth : Feet
     , twinPosition : WorldCoordinate
+    , logs : List WorldCoordinate
     }
 
 
@@ -36,10 +37,19 @@ type Msg
     = Noop
 
 
+logs : List WorldCoordinate
+logs =
+    [ WorldCoordinate (Vector.vec 60 39)
+    , WorldCoordinate (Vector.vec 75 50)
+    , WorldCoordinate (Vector.vec 100 35)
+    ]
+
+
 initialModel : Model
 initialModel =
     { riverWidth = Feet 30
     , twinPosition = WorldCoordinate (Vector.vec 41 41)
+    , logs = logs
     }
 
 
@@ -83,10 +93,20 @@ river feet =
             |> Collage.filled Color.blue
 
 
-twins : Collage.Form
+twins : Element
 twins =
     Collage.rect 35 25
         |> Collage.filled Color.brown
+        |> List.singleton
+        |> Collage.collage 35 25
+
+
+log : Element
+log =
+    Collage.rect 45 25
+        |> Collage.filled Color.darkBrown
+        |> List.singleton
+        |> Collage.collage 45 25
 
 
 positionAt : ScreenCoordinate -> Element -> Element
@@ -108,9 +128,13 @@ view model =
             Collage.collage 800 500 [ background, river model.riverWidth ]
 
         boys =
-            positionAt (toScreen model.twinPosition) (Collage.collage 35 25 [ twins ])
+            positionAt (toScreen model.twinPosition) twins
+
+        obstacles =
+            List.map (\logPos -> positionAt (toScreen logPos) log) model.logs
+                |> Element.layers
     in
-        Element.layers [ nature, boys ]
+        Element.layers [ nature, boys, obstacles ]
             |> Element.toHtml
 
 
