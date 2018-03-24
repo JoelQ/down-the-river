@@ -1,10 +1,12 @@
 module Main exposing (main)
 
-import Html exposing (Html)
-import Element exposing (Element)
+import AnimationFrame
 import Collage
 import Color
+import Element exposing (Element)
 import Euclid.Vector as Vector
+import Html exposing (Html)
+import Time exposing (Time)
 
 
 type Feet
@@ -12,17 +14,28 @@ type Feet
 
 
 type WorldCoordinate
-    = WorldCoordinate (Vector.V2 Int)
+    = WorldCoordinate (Vector.V2 Float)
 
 
 type ScreenCoordinate
     = ScreenCoordinate (Vector.V2 Int)
 
 
+type LocalCoordinate
+    = LocalCoordinate (Vector.V2 Float)
+
+
+moveRelative : LocalCoordinate -> WorldCoordinate -> WorldCoordinate
+moveRelative (LocalCoordinate moveBy) (WorldCoordinate initialPosition) =
+    Vector.add moveBy initialPosition
+        |> WorldCoordinate
+
+
 toScreen : WorldCoordinate -> ScreenCoordinate
 toScreen (WorldCoordinate vector) =
     vector
         |> Vector.scale pixelsPerFoot
+        |> Vector.map round
         |> ScreenCoordinate
 
 
@@ -34,7 +47,7 @@ type alias Model =
 
 
 type Msg
-    = Noop
+    = Tick Time
 
 
 logs : List WorldCoordinate
@@ -60,14 +73,37 @@ init =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        Tick diff ->
+            ( moveTwinsDownstream diff model, Cmd.none )
+
+
+riverFeetPerSecond : Feet
+riverFeetPerSecond =
+    Feet 10
+
+
+moveTwinsDownstream : Time -> Model -> Model
+moveTwinsDownstream diff model =
+    let
+        (Feet distanceSecond) =
+            riverFeetPerSecond
+
+        distanceTravelled =
+            (Time.inSeconds diff) * (toFloat distanceSecond)
+
+        newPosition =
+            model.twinPosition
+                |> moveRelative (LocalCoordinate (Vector.vec distanceTravelled 0))
+    in
+        { model | twinPosition = newPosition }
 
 
 type Pixels
     = Pixels Int
 
 
-pixelsPerFoot : Int
+pixelsPerFoot : number
 pixelsPerFoot =
     6
 
@@ -140,7 +176,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    AnimationFrame.diffs Tick
 
 
 main : Program Never Model Msg
