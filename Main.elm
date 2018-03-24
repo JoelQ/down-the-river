@@ -39,7 +39,12 @@ toScreen (WorldCoordinate vector) =
         |> ScreenCoordinate
 
 
-type alias Model =
+type Model
+    = Playing GameState
+    | Lost GameState
+
+
+type alias GameState =
     { riverWidth : Feet
     , twinPosition : WorldCoordinate
     , logs : List WorldCoordinate
@@ -60,6 +65,11 @@ logs =
 
 initialModel : Model
 initialModel =
+    Playing initialGameState
+
+
+initialGameState : GameState
+initialGameState =
     { riverWidth = Feet 30
     , twinPosition = WorldCoordinate (Vector.vec 41 41)
     , logs = logs
@@ -75,7 +85,21 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick diff ->
-            ( moveTwinsDownstream diff model, Cmd.none )
+            case model of
+                Playing state ->
+                    state
+                        |> moveTwinsDownstream diff
+                        |> Playing
+                        |> withNoCmd
+
+                Lost _ ->
+                    model
+                        |> withNoCmd
+
+
+withNoCmd : a -> ( a, Cmd msg )
+withNoCmd value =
+    ( value, Cmd.none )
 
 
 riverFeetPerSecond : Feet
@@ -83,8 +107,8 @@ riverFeetPerSecond =
     Feet 10
 
 
-moveTwinsDownstream : Time -> Model -> Model
-moveTwinsDownstream diff model =
+moveTwinsDownstream : Time -> GameState -> GameState
+moveTwinsDownstream diff state =
     let
         (Feet distanceSecond) =
             riverFeetPerSecond
@@ -93,10 +117,10 @@ moveTwinsDownstream diff model =
             (Time.inSeconds diff) * (toFloat distanceSecond)
 
         newPosition =
-            model.twinPosition
+            state.twinPosition
                 |> moveRelative (LocalCoordinate (Vector.vec distanceTravelled 0))
     in
-        { model | twinPosition = newPosition }
+        { state | twinPosition = newPosition }
 
 
 type Pixels
@@ -159,15 +183,25 @@ positionAt (ScreenCoordinate vector) element =
 
 view : Model -> Html a
 view model =
+    case model of
+        Playing state ->
+            viewGameState state
+
+        Lost state ->
+            viewGameState state
+
+
+viewGameState : GameState -> Html a
+viewGameState state =
     let
         nature =
-            Collage.collage 800 500 [ background, river model.riverWidth ]
+            Collage.collage 800 500 [ background, river state.riverWidth ]
 
         boys =
-            positionAt (toScreen model.twinPosition) twins
+            positionAt (toScreen state.twinPosition) twins
 
         obstacles =
-            List.map (\logPos -> positionAt (toScreen logPos) log) model.logs
+            List.map (\logPos -> positionAt (toScreen logPos) log) state.logs
                 |> Element.layers
     in
         Element.layers [ nature, boys, obstacles ]
