@@ -99,10 +99,10 @@ checkLoseCondition : GameState -> Model
 checkLoseCondition ({ twinPosition, logs } as state) =
     let
         obstacles =
-            (List.map logToCollidable logs)
+            (List.map logToBoundingBox logs)
 
         subject =
-            twinsToCollidable twinPosition
+            twinsToBoundingBox twinPosition
     in
         if subject |> Collision.hasCollidedWithAny obstacles then
             Lost state
@@ -110,16 +110,16 @@ checkLoseCondition ({ twinPosition, logs } as state) =
             Playing state
 
 
-logToCollidable : Coordinate.World -> Collision.BoundingBox
-logToCollidable position =
+logToBoundingBox : Coordinate.World -> Collision.BoundingBox
+logToBoundingBox position =
     { position = position
     , width = logWidth
     , height = logHeight
     }
 
 
-twinsToCollidable : Coordinate.World -> Collision.BoundingBox
-twinsToCollidable position =
+twinsToBoundingBox : Coordinate.World -> Collision.BoundingBox
+twinsToBoundingBox position =
     { position = position
     , width = twinWidth
     , height = twinHeight
