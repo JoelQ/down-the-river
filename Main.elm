@@ -89,7 +89,7 @@ update msg model =
                 Playing state ->
                     state
                         |> moveTwinsDownstream diff
-                        |> Playing
+                        |> checkLoseCondition
                         |> withNoCmd
 
                 Lost _ ->
@@ -123,6 +123,88 @@ moveTwinsDownstream diff state =
         { state | twinPosition = newPosition }
 
 
+checkLoseCondition : GameState -> Model
+checkLoseCondition ({ twinPosition, logs } as state) =
+    let
+        obstacles =
+            (List.map logToCollidable logs)
+
+        subject =
+            twinsToCollidable twinPosition
+    in
+        if subject |> hasCollidedWithAny obstacles then
+            Lost state
+        else
+            Playing state
+
+
+type alias Collidable =
+    { position : WorldCoordinate
+    , width : Feet
+    , height : Feet
+    }
+
+
+logToCollidable : WorldCoordinate -> Collidable
+logToCollidable position =
+    { position = position
+    , width = logWidth
+    , height = logHeight
+    }
+
+
+twinsToCollidable : WorldCoordinate -> Collidable
+twinsToCollidable position =
+    { position = position
+    , width = twinWidth
+    , height = twinHeight
+    }
+
+
+hasCollidedWithAny : List Collidable -> Collidable -> Bool
+hasCollidedWithAny objects subject =
+    List.any (haveCollided subject) objects
+
+
+haveCollided : Collidable -> Collidable -> Bool
+haveCollided c1 c2 =
+    let
+        (WorldCoordinate r1Position) =
+            c1.position
+
+        (WorldCoordinate r2Position) =
+            c2.position
+
+        (Feet r1Width) =
+            c1.width
+
+        (Feet r1Height) =
+            c1.height
+
+        (Feet r2Width) =
+            c2.width
+
+        (Feet r2Height) =
+            c2.height
+
+        r1X =
+            round r1Position.x
+
+        r1Y =
+            round r1Position.y
+
+        r2X =
+            round r2Position.x
+
+        r2Y =
+            round r2Position.y
+    in
+        (r1X < (r2X + r2Width))
+            && ((r1X + r1Width) > r2X)
+            && (r1Y < (r2Y + r2Height))
+            && ((r1Height + r1Y) > r2Y)
+
+
 type Pixels
     = Pixels Int
 
@@ -153,20 +235,67 @@ river feet =
             |> Collage.filled Color.blue
 
 
+twinHeight : Feet
+twinHeight =
+    Feet 5
+
+
+twinWidth : Feet
+twinWidth =
+    Feet 6
+
+
 twins : Element
 twins =
-    Collage.rect 35 25
-        |> Collage.filled Color.brown
-        |> List.singleton
-        |> Collage.collage 35 25
+    let
+        width =
+            twinWidth
+                |> feetToPixels
+                |> rawPixels
+
+        height =
+            twinHeight
+                |> feetToPixels
+                |> rawPixels
+    in
+        Collage.rect (toFloat width) (toFloat height)
+            |> Collage.filled Color.brown
+            |> List.singleton
+            |> Collage.collage width height
+
+
+logWidth : Feet
+logWidth =
+    Feet 8
+
+
+logHeight : Feet
+logHeight =
+    Feet 5
+
+
+rawPixels : Pixels -> Int
+rawPixels (Pixels raw) =
+    raw
 
 
 log : Element
 log =
-    Collage.rect 45 25
-        |> Collage.filled Color.darkBrown
-        |> List.singleton
-        |> Collage.collage 45 25
+    let
+        width =
+            logWidth
+                |> feetToPixels
+                |> rawPixels
+
+        height =
+            logHeight
+                |> feetToPixels
+                |> rawPixels
+    in
+        Collage.rect (toFloat width) (toFloat height)
+            |> Collage.filled Color.darkBrown
+            |> List.singleton
+            |> Collage.collage width height
 
 
 positionAt : ScreenCoordinate -> Element -> Element
@@ -210,7 +339,12 @@ viewGameState state =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    AnimationFrame.diffs Tick
+    case model of
+        Lost _ ->
+            Sub.none
+
+        Playing _ ->
+            AnimationFrame.diffs Tick
 
 
 main : Program Never Model Msg
