@@ -4,7 +4,7 @@ import AnimationFrame
 import Collage
 import Collision
 import Color
-import Coordinate
+import Coordinate exposing (Viewport)
 import Element exposing (Element)
 import Html exposing (Html)
 import Measurement exposing (Feet(..), Pixels(..))
@@ -20,6 +20,14 @@ type alias GameState =
     { riverWidth : Feet
     , twinPosition : Coordinate.World
     , logs : List Coordinate.World
+    }
+
+
+initialViewport : Viewport
+initialViewport =
+    { position = Coordinate.world 0 0
+    , width = Feet 133
+    , height = Feet 86
     }
 
 
@@ -126,19 +134,29 @@ twinsToBoundingBox position =
     }
 
 
-background : Collage.Form
-background =
-    Collage.rect 800 500
-        |> Collage.filled Color.green
+background : Viewport -> Collage.Form
+background viewport =
+    let
+        width =
+            Measurement.feetToRawPixels viewport.width
+
+        height =
+            Measurement.feetToRawPixels viewport.height
+    in
+        Collage.rect (toFloat width) (toFloat height)
+            |> Collage.filled Color.green
 
 
-river : Feet -> Collage.Form
-river feet =
+river : Viewport -> Feet -> Collage.Form
+river viewport feet =
     let
         width =
             Measurement.feetToRawPixels feet
+
+        height =
+            Measurement.feetToRawPixels viewport.width
     in
-        Collage.rect 800 (toFloat width)
+        Collage.rect (toFloat height) (toFloat width)
             |> Collage.filled Color.blue
 
 
@@ -192,16 +210,22 @@ log =
             |> Collage.collage width height
 
 
-positionAt : Coordinate.Screen -> Element -> Element
-positionAt position element =
+positionAt : Viewport -> Coordinate.Screen -> Element -> Element
+positionAt viewport position element =
     let
         x =
             Element.absolute (Coordinate.screenX position)
 
         y =
             Element.absolute (Coordinate.screenY position)
+
+        width =
+            Measurement.feetToRawPixels viewport.width
+
+        height =
+            Measurement.feetToRawPixels viewport.height
     in
-        Element.container 800 500 (Element.bottomLeftAt x y) element
+        Element.container width height (Element.bottomLeftAt x y) element
 
 
 view : Model -> Html a
@@ -214,19 +238,28 @@ view model =
             viewGameState state
 
 
+viewNature : Viewport -> Feet -> Element
+viewNature viewport riverWidth =
+    Collage.collage (Measurement.feetToRawPixels viewport.width)
+        (Measurement.feetToRawPixels viewport.height)
+        [ background viewport
+        , river viewport riverWidth
+        ]
+
+
 viewGameState : GameState -> Html a
 viewGameState state =
     let
         nature =
-            Collage.collage 800 500 [ background, river state.riverWidth ]
+            viewNature initialViewport state.riverWidth
 
         boys =
-            positionAt (Coordinate.toScreen state.twinPosition) twins
+            positionAt initialViewport (Coordinate.toScreen initialViewport state.twinPosition) twins
 
         obstacles =
             List.map
                 (\logPos ->
-                    positionAt (Coordinate.toScreen logPos) log
+                    positionAt initialViewport (Coordinate.toScreen initialViewport logPos) log
                 )
                 state.logs
                 |> Element.layers

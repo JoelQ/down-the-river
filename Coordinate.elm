@@ -3,6 +3,7 @@ module Coordinate
         ( World
         , Screen
         , Object
+        , Viewport
         , world
         , worldX
         , worldY
@@ -13,7 +14,7 @@ module Coordinate
         )
 
 import Euclid.Vector as Vector
-import Measurement
+import Measurement exposing (Feet)
 
 
 -- CONSTRUCTORS
@@ -29,6 +30,13 @@ type Screen
 
 type Object
     = Object (Vector.V2 Float)
+
+
+type alias Viewport =
+    { position : World
+    , width : Feet
+    , height : Feet
+    }
 
 
 world : Float -> Float -> World
@@ -84,9 +92,26 @@ move (Object moveBy) (World initialPosition) =
 -- CONVERSIONS
 
 
-toScreen : World -> Screen
-toScreen (World vector) =
-    vector
+relativeTo : World -> World -> Object
+relativeTo (World target) (World position) =
+    Vector.subtract position target
+        |> Object
+
+
+toScreen : Viewport -> World -> Screen
+toScreen viewport position =
+    position
+        |> relativeTo viewport.position
+        |> objectVector
         |> Vector.scale Measurement.pixelsPerFoot
         |> Vector.map round
         |> Screen
+
+
+
+-- UNWRAP
+
+
+objectVector : Object -> Vector.V2 Float
+objectVector (Object position) =
+    position
