@@ -9,7 +9,7 @@ module Coordinate
         , worldY
         , screenX
         , screenY
-        , moveX
+        , moveBy
         , toScreen
         )
 
@@ -77,14 +77,14 @@ screenY (Screen position) =
 -- MOVEMENT
 
 
-moveX : Float -> World -> World
-moveX distance position =
-    move (relative distance 0) position
+moveBy : Float -> Float -> World -> World
+moveBy x y position =
+    move (relative x y) position
 
 
 move : Object -> World -> World
-move (Object moveBy) (World initialPosition) =
-    Vector.add moveBy initialPosition
+move (Object offset) (World initialPosition) =
+    Vector.add offset initialPosition
         |> World
 
 

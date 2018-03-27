@@ -7,6 +7,7 @@ import Color
 import Coordinate exposing (Viewport)
 import Element exposing (Element)
 import Html exposing (Html)
+import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
 import Time exposing (Time)
 
@@ -16,10 +17,17 @@ type Model
     | Lost GameState
 
 
+type YDirection
+    = Up
+    | Down
+    | Drifting
+
+
 type alias GameState =
     { riverWidth : Feet
     , twinPosition : Coordinate.World
     , logs : List Coordinate.World
+    , yDirection : YDirection
     }
 
 
@@ -64,6 +72,7 @@ viewportWidth =
 
 type Msg
     = Tick Time
+    | Move YDirection
 
 
 logs : List Coordinate.World
@@ -84,6 +93,7 @@ initialGameState =
     { riverWidth = Feet 30
     , twinPosition = Coordinate.world 41 41
     , logs = logs
+    , yDirection = Drifting
     }
 
 
@@ -96,16 +106,37 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick diff ->
-            case model of
-                Playing state ->
-                    state
-                        |> moveTwinsDownstream diff
-                        |> checkLoseCondition
-                        |> withNoCmd
+            tick diff model
 
-                Lost _ ->
-                    model
-                        |> withNoCmd
+        Move direction ->
+            move direction model
+
+
+move : YDirection -> Model -> ( Model, Cmd Msg )
+move direction model =
+    case model of
+        Playing state ->
+            { state | yDirection = direction }
+                |> Playing
+                |> withNoCmd
+
+        _ ->
+            model
+                |> withNoCmd
+
+
+tick : Time -> Model -> ( Model, Cmd Msg )
+tick diff model =
+    case model of
+        Playing state ->
+            state
+                |> moveTwinsDownstream diff
+                |> checkLoseCondition
+                |> withNoCmd
+
+        Lost _ ->
+            model
+                |> withNoCmd
 
 
 withNoCmd : a -> ( a, Cmd msg )
@@ -118,18 +149,37 @@ riverFeetPerSecond =
     Feet 10
 
 
+twinsFeetPerSecond : Feet
+twinsFeetPerSecond =
+    Feet 5
+
+
+distanceTravelledInInterval : Feet -> Time -> Float
+distanceTravelledInInterval (Feet distanceSecond) diff =
+    (Time.inSeconds diff) * (toFloat distanceSecond)
+
+
 moveTwinsDownstream : Time -> GameState -> GameState
 moveTwinsDownstream diff state =
     let
-        (Feet distanceSecond) =
-            riverFeetPerSecond
+        downstreamDistance =
+            distanceTravelledInInterval riverFeetPerSecond diff
 
-        distanceTravelled =
-            (Time.inSeconds diff) * (toFloat distanceSecond)
+        accrossDistance =
+            case state.yDirection of
+                Up ->
+                    distanceTravelledInInterval twinsFeetPerSecond diff
+
+                Down ->
+                    distanceTravelledInInterval twinsFeetPerSecond diff
+                        |> negate
+
+                Drifting ->
+                    0
 
         newPosition =
             state.twinPosition
-                |> Coordinate.moveX distanceTravelled
+                |> Coordinate.moveBy downstreamDistance accrossDistance
     in
         { state | twinPosition = newPosition }
 
@@ -316,7 +366,24 @@ subscriptions model =
             Sub.none
 
         Playing _ ->
-            AnimationFrame.diffs Tick
+            Sub.batch
+                [ AnimationFrame.diffs Tick
+                , Keyboard.downs keypressMessage
+                , Keyboard.ups (\_ -> Move Drifting)
+                ]
+
+
+keypressMessage : Keyboard.KeyCode -> Msg
+keypressMessage code =
+    case code of
+        38 ->
+            Move Up
+
+        40 ->
+            Move Down
+
+        _ ->
+            Move Drifting
 
 
 main : Program Never Model Msg
