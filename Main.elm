@@ -31,6 +31,27 @@ initialViewport =
     }
 
 
+viewportFor : Coordinate.World -> Viewport
+viewportFor twinPosition =
+    let
+        twinX =
+            Coordinate.worldX twinPosition
+
+        widthInFeet =
+            Measurement.pixelsToFeet viewportWidth
+
+        halfViewport =
+            (toFloat <| Measurement.rawFeet widthInFeet) / 2
+
+        edgeX =
+            twinX - halfViewport
+    in
+        { position = Coordinate.world edgeX 0
+        , width = viewportWidth
+        , height = viewportHeight
+        }
+
+
 viewportHeight : Pixels
 viewportHeight =
     Pixels 500
@@ -267,16 +288,19 @@ viewNature viewport riverWidth =
 viewGameState : GameState -> Html a
 viewGameState state =
     let
+        viewport =
+            viewportFor state.twinPosition
+
         nature =
-            viewNature initialViewport state.riverWidth
+            viewNature viewport state.riverWidth
 
         boys =
-            positionAt initialViewport (Coordinate.toScreen initialViewport state.twinPosition) twins
+            positionAt viewport (Coordinate.toScreen viewport state.twinPosition) twins
 
         obstacles =
             List.map
                 (\logPos ->
-                    positionAt initialViewport (Coordinate.toScreen initialViewport logPos) log
+                    positionAt viewport (Coordinate.toScreen viewport logPos) log
                 )
                 state.logs
                 |> Element.layers

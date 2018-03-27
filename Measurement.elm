@@ -3,6 +3,7 @@ module Measurement
         ( Feet(..)
         , Pixels(..)
         , pixelsPerFoot
+        , pixelsToFeet
         , feetToPixels
         , feetToRawPixels
         , rawFeet
@@ -30,6 +31,11 @@ rawPixels (Pixels n) =
 pixelsPerFoot : number
 pixelsPerFoot =
     6
+
+
+pixelsToFeet : Pixels -> Feet
+pixelsToFeet (Pixels px) =
+    Feet (px // pixelsPerFoot)
 
 
 feetToPixels : Feet -> Pixels
