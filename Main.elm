@@ -26,9 +26,19 @@ type alias GameState =
 initialViewport : Viewport
 initialViewport =
     { position = Coordinate.world 0 0
-    , width = Feet 133
-    , height = Feet 86
+    , width = viewportWidth
+    , height = viewportHeight
     }
+
+
+viewportHeight : Pixels
+viewportHeight =
+    Pixels 500
+
+
+viewportWidth : Pixels
+viewportWidth =
+    Pixels 800
 
 
 type Msg
@@ -137,11 +147,11 @@ twinsToBoundingBox position =
 background : Viewport -> Collage.Form
 background viewport =
     let
-        width =
-            Measurement.feetToRawPixels viewport.width
+        (Pixels width) =
+            viewport.width
 
-        height =
-            Measurement.feetToRawPixels viewport.height
+        (Pixels height) =
+            viewport.height
     in
         Collage.rect (toFloat width) (toFloat height)
             |> Collage.filled Color.green
@@ -153,8 +163,8 @@ river viewport feet =
         width =
             Measurement.feetToRawPixels feet
 
-        height =
-            Measurement.feetToRawPixels viewport.width
+        (Pixels height) =
+            viewport.width
     in
         Collage.rect (toFloat height) (toFloat width)
             |> Collage.filled Color.blue
@@ -219,11 +229,11 @@ positionAt viewport position element =
         y =
             Element.absolute (Coordinate.screenY position)
 
-        width =
-            Measurement.feetToRawPixels viewport.width
+        (Pixels width) =
+            viewport.width
 
-        height =
-            Measurement.feetToRawPixels viewport.height
+        (Pixels height) =
+            viewport.height
     in
         Element.container width height (Element.bottomLeftAt x y) element
 
@@ -240,11 +250,18 @@ view model =
 
 viewNature : Viewport -> Feet -> Element
 viewNature viewport riverWidth =
-    Collage.collage (Measurement.feetToRawPixels viewport.width)
-        (Measurement.feetToRawPixels viewport.height)
-        [ background viewport
-        , river viewport riverWidth
-        ]
+    let
+        (Pixels width) =
+            viewport.width
+
+        (Pixels height) =
+            viewport.height
+    in
+        Collage.collage width
+            height
+            [ background viewport
+            , river viewport riverWidth
+            ]
 
 
 viewGameState : GameState -> Html a

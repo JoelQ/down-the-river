@@ -14,7 +14,7 @@ module Coordinate
         )
 
 import Euclid.Vector as Vector
-import Measurement exposing (Feet)
+import Measurement exposing (Pixels)
 
 
 -- CONSTRUCTORS
@@ -34,8 +34,8 @@ type Object
 
 type alias Viewport =
     { position : World
-    , width : Feet
-    , height : Feet
+    , width : Pixels
+    , height : Pixels
     }
 
 
