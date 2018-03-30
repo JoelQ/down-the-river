@@ -15,6 +15,7 @@ import Time exposing (Time)
 type Model
     = Playing GameState
     | Lost GameState
+    | Won GameState
 
 
 type YDirection
@@ -137,8 +138,10 @@ tick diff model =
                 |> withNoCmd
 
         Lost _ ->
-            model
-                |> withNoCmd
+            model |> withNoCmd
+
+        Won _ ->
+            model |> withNoCmd
 
 
 withNoCmd : a -> ( a, Cmd msg )
@@ -345,6 +348,9 @@ view model =
         Lost state ->
             viewGameState state
 
+        Won state ->
+            viewGameState state
+
 
 viewNature : Viewport -> Feet -> Element
 viewNature viewport riverWidth =
@@ -398,6 +404,9 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
         Lost _ ->
+            Sub.none
+
+        Won _ ->
             Sub.none
 
         Playing _ ->
