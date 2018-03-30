@@ -27,6 +27,7 @@ type alias GameState =
     { riverWidth : Feet
     , twinPosition : Coordinate.World
     , logs : List Coordinate.World
+    , wolves : List Coordinate.World
     , yDirection : YDirection
     }
 
@@ -93,6 +94,7 @@ initialGameState =
     { riverWidth = Feet 30
     , twinPosition = Coordinate.world 41 41
     , logs = logs
+    , wolves = [ Coordinate.world 100 57 ]
     , yDirection = Drifting
     }
 
@@ -291,6 +293,31 @@ log =
             |> Collage.collage width height
 
 
+wolfWidth : Feet
+wolfWidth =
+    Feet 5
+
+
+wolfHeight : Feet
+wolfHeight =
+    Feet 7
+
+
+wolf : Element
+wolf =
+    let
+        width =
+            Measurement.feetToRawPixels wolfWidth
+
+        height =
+            Measurement.feetToRawPixels wolfHeight
+    in
+        Collage.rect (toFloat width) (toFloat height)
+            |> Collage.filled Color.lightCharcoal
+            |> List.singleton
+            |> Collage.collage width height
+
+
 positionAt : Viewport -> Coordinate.Screen -> Element -> Element
 positionAt viewport position element =
     let
@@ -347,6 +374,14 @@ viewGameState state =
         boys =
             positionAt viewport (Coordinate.toScreen viewport state.twinPosition) twins
 
+        wolves =
+            List.map
+                (\wolfPos ->
+                    positionAt viewport (Coordinate.toScreen viewport wolfPos) wolf
+                )
+                state.wolves
+                |> Element.layers
+
         obstacles =
             List.map
                 (\logPos ->
@@ -355,7 +390,7 @@ viewGameState state =
                 state.logs
                 |> Element.layers
     in
-        Element.layers [ nature, boys, obstacles ]
+        Element.layers [ nature, boys, obstacles, wolves ]
             |> Element.toHtml
 
 
