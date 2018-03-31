@@ -140,6 +140,7 @@ tick diff model =
             state
                 |> moveTwinsDownstream diff
                 |> checkLoseCondition
+                |> andThen checkArrivalOnBank
                 |> withNoCmd
 
         Lost _ ->
@@ -194,6 +195,16 @@ moveTwinsDownstream diff state =
         { state | twinPosition = newPosition }
 
 
+andThen : (GameState -> Model) -> Model -> Model
+andThen func game =
+    case game of
+        Playing state ->
+            func state
+
+        _ ->
+            game
+
+
 checkLoseCondition : GameState -> Model
 checkLoseCondition ({ twinPosition, logs } as state) =
     let
@@ -207,6 +218,31 @@ checkLoseCondition ({ twinPosition, logs } as state) =
             Lost state
         else
             Playing state
+
+
+checkArrivalOnBank : GameState -> Model
+checkArrivalOnBank state =
+    if hasArrivedOnBank state then
+        Lost state
+    else
+        Playing state
+
+
+hasArrivedOnBank : GameState -> Bool
+hasArrivedOnBank { twinPosition, riverPosition } =
+    let
+        northBank =
+            Coordinate.worldY riverPosition
+
+        southBank =
+            (Coordinate.worldY riverPosition)
+                + (toFloat <| Measurement.rawFeet riverAccross)
+
+        twins =
+            twinsToBoundingBox twinPosition
+    in
+        (twins |> Collision.hasCrossedHorizontalLine northBank)
+            || (twins |> Collision.hasCrossedHorizontalLine southBank)
 
 
 logToBoundingBox : Coordinate.World -> Collision.BoundingBox

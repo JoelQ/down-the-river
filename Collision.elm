@@ -1,7 +1,12 @@
-module Collision exposing (BoundingBox, hasCollidedWithAny)
+module Collision
+    exposing
+        ( BoundingBox
+        , hasCrossedHorizontalLine
+        , hasCollidedWithAny
+        )
 
 import Coordinate
-import Measurement exposing (Feet)
+import Measurement exposing (Feet(..))
 
 
 type alias BoundingBox =
@@ -9,6 +14,21 @@ type alias BoundingBox =
     , width : Feet
     , height : Feet
     }
+
+
+hasCrossedHorizontalLine : Float -> BoundingBox -> Bool
+hasCrossedHorizontalLine y box =
+    let
+        height =
+            toFloat (Measurement.rawFeet box.height)
+
+        bottom =
+            Coordinate.worldY box.position
+
+        top =
+            bottom + height
+    in
+        (bottom < y && y < top)
 
 
 hasCollidedWithAny : List BoundingBox -> BoundingBox -> Bool
