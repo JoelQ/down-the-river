@@ -25,7 +25,7 @@ type YDirection
 
 
 type alias GameState =
-    { riverWidth : Feet
+    { riverPosition : Coordinate.World
     , twinPosition : Coordinate.World
     , logs : List Coordinate.World
     , wolves : List Coordinate.World
@@ -92,12 +92,17 @@ initialModel =
 
 initialGameState : GameState
 initialGameState =
-    { riverWidth = Feet 30
-    , twinPosition = Coordinate.world 41 41
+    { twinPosition = Coordinate.world 41 41
+    , riverPosition = Coordinate.world -50 30
     , logs = logs
-    , wolves = [ Coordinate.world 100 57 ]
+    , wolves = [ Coordinate.world 100 60 ]
     , yDirection = Drifting
     }
+
+
+riverAccross : Feet
+riverAccross =
+    Feet 30
 
 
 init : ( Model, Cmd Msg )
@@ -233,17 +238,29 @@ background viewport =
             |> Collage.filled Color.green
 
 
-river : Viewport -> Feet -> Collage.Form
-river viewport feet =
+river : Viewport -> Coordinate.World -> Element
+river viewport riverPosition =
     let
-        width =
-            Measurement.feetToRawPixels feet
+        height =
+            Measurement.feetToRawPixels riverAccross
 
-        (Pixels height) =
+        (Pixels viewportWidth) =
             viewport.width
+
+        distanceToViewport =
+            (Coordinate.worldX viewport.position)
+                - (Coordinate.worldX riverPosition)
+
+        width =
+            (distanceToViewport + (toFloat viewportWidth))
+                |> round
+                |> Feet
+                |> Measurement.feetToRawPixels
     in
-        Collage.rect (toFloat height) (toFloat width)
+        Collage.rect (toFloat width) (toFloat height)
             |> Collage.filled Color.blue
+            |> List.singleton
+            |> Collage.collage width height
 
 
 twinHeight : Feet
@@ -352,8 +369,8 @@ view model =
             viewGameState state
 
 
-viewNature : Viewport -> Feet -> Element
-viewNature viewport riverWidth =
+viewNature : Viewport -> Element
+viewNature viewport =
     let
         (Pixels width) =
             viewport.width
@@ -364,7 +381,6 @@ viewNature viewport riverWidth =
         Collage.collage width
             height
             [ background viewport
-            , river viewport riverWidth
             ]
 
 
@@ -375,7 +391,7 @@ viewGameState state =
             viewportFor state.twinPosition
 
         nature =
-            viewNature viewport state.riverWidth
+            viewNature viewport
 
         boys =
             positionAt viewport (Coordinate.toScreen viewport state.twinPosition) twins
@@ -395,8 +411,13 @@ viewGameState state =
                 )
                 state.logs
                 |> Element.layers
+
+        renderedRiver =
+            positionAt viewport
+                (Coordinate.toScreen viewport state.riverPosition)
+                (river viewport state.riverPosition)
     in
-        Element.layers [ nature, boys, obstacles, wolves ]
+        Element.layers [ nature, renderedRiver, boys, obstacles, wolves ]
             |> Element.toHtml
 
 
