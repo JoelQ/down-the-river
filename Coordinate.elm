@@ -11,10 +11,11 @@ module Coordinate
         , screenY
         , moveBy
         , toScreen
+        , distanceBetwen
         )
 
 import Euclid.Vector as Vector
-import Measurement exposing (Pixels)
+import Measurement exposing (Pixels, Feet(..))
 
 
 -- CONSTRUCTORS
@@ -115,3 +116,15 @@ toScreen viewport position =
 objectVector : Object -> Vector.V2 Float
 objectVector (Object position) =
     position
+
+
+
+-- QUERYING
+
+
+distanceBetwen : World -> World -> Feet
+distanceBetwen (World p1) (World p2) =
+    Vector.subtract p1 p2
+        |> Vector.abs
+        |> round
+        |> Feet

@@ -220,12 +220,37 @@ checkLoseCondition ({ twinPosition, logs } as state) =
             Playing state
 
 
+maxDistanceToWolf : Feet
+maxDistanceToWolf =
+    Feet 10
+
+
 checkArrivalOnBank : GameState -> Model
 checkArrivalOnBank state =
     if hasArrivedOnBank state then
-        Lost state
+        if closeEnoughToWolf state then
+            Won state
+        else
+            Lost state
     else
         Playing state
+
+
+closeEnoughToWolf : GameState -> Bool
+closeEnoughToWolf state =
+    List.any (closeEnough state.twinPosition) state.wolves
+
+
+closeEnough : Coordinate.World -> Coordinate.World -> Bool
+closeEnough twins wolf =
+    let
+        (Feet distance) =
+            Coordinate.distanceBetwen twins wolf
+
+        (Feet max) =
+            maxDistanceToWolf
+    in
+        distance < max
 
 
 hasArrivedOnBank : GameState -> Bool
