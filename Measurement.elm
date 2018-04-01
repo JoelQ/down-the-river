@@ -7,6 +7,8 @@ module Measurement
         , feetToPixels
         , feetToRawPixels
         , rawFeet
+        , addFeet
+        , timesUnits
         )
 
 
@@ -46,3 +48,13 @@ feetToPixels (Feet ft) =
 feetToRawPixels : Feet -> Int
 feetToRawPixels =
     rawPixels << feetToPixels
+
+
+addFeet : Feet -> Feet -> Feet
+addFeet (Feet f1) (Feet f2) =
+    Feet (f1 + f2)
+
+
+timesUnits : Int -> Feet -> Feet
+timesUnits n (Feet f) =
+    Feet (n * f)

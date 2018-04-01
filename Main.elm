@@ -10,6 +10,7 @@ import Html exposing (Html)
 import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
 import Time exposing (Time)
+import River exposing (River)
 
 
 type Model
@@ -25,10 +26,8 @@ type YDirection
 
 
 type alias GameState =
-    { riverPosition : Coordinate.World
+    { river : River
     , twinPosition : Coordinate.World
-    , logs : List Coordinate.World
-    , wolves : List Coordinate.World
     , yDirection : YDirection
     }
 
@@ -77,14 +76,6 @@ type Msg
     | Move YDirection
 
 
-logs : List Coordinate.World
-logs =
-    [ Coordinate.world 60 39
-    , Coordinate.world 75 50
-    , Coordinate.world 100 35
-    ]
-
-
 initialModel : Model
 initialModel =
     Playing initialGameState
@@ -93,16 +84,9 @@ initialModel =
 initialGameState : GameState
 initialGameState =
     { twinPosition = Coordinate.world 41 41
-    , riverPosition = Coordinate.world -50 30
-    , logs = logs
-    , wolves = [ Coordinate.world 100 60 ]
+    , river = River.initial
     , yDirection = Drifting
     }
-
-
-riverAccross : Feet
-riverAccross =
-    Feet 30
 
 
 init : ( Model, Cmd Msg )
@@ -206,10 +190,10 @@ andThen func game =
 
 
 checkLoseCondition : GameState -> Model
-checkLoseCondition ({ twinPosition, logs } as state) =
+checkLoseCondition ({ twinPosition, river } as state) =
     let
         obstacles =
-            (List.map logToBoundingBox logs)
+            List.map logToBoundingBox (River.logs river)
 
         subject =
             twinsToBoundingBox twinPosition
@@ -238,7 +222,7 @@ checkArrivalOnBank state =
 
 closeEnoughToWolf : GameState -> Bool
 closeEnoughToWolf state =
-    List.any (closeEnough state.twinPosition) state.wolves
+    List.any (closeEnough state.twinPosition) (River.wolves state.river)
 
 
 closeEnough : Coordinate.World -> Coordinate.World -> Bool
@@ -254,14 +238,14 @@ closeEnough twins wolf =
 
 
 hasArrivedOnBank : GameState -> Bool
-hasArrivedOnBank { twinPosition, riverPosition } =
+hasArrivedOnBank { twinPosition, river } =
     let
         northBank =
-            Coordinate.worldY riverPosition
+            Coordinate.worldY river.position
 
         southBank =
-            (Coordinate.worldY riverPosition)
-                + (toFloat <| Measurement.rawFeet riverAccross)
+            (Coordinate.worldY river.position)
+                + (toFloat <| Measurement.rawFeet River.accross)
 
         twins =
             twinsToBoundingBox twinPosition
@@ -297,31 +281,6 @@ background viewport =
     in
         Collage.rect (toFloat width) (toFloat height)
             |> Collage.filled Color.green
-
-
-river : Viewport -> Coordinate.World -> Element
-river viewport riverPosition =
-    let
-        height =
-            Measurement.feetToRawPixels riverAccross
-
-        (Pixels viewportWidth) =
-            viewport.width
-
-        distanceToViewport =
-            (Coordinate.worldX viewport.position)
-                - (Coordinate.worldX riverPosition)
-
-        width =
-            (distanceToViewport + (toFloat viewportWidth))
-                |> round
-                |> Feet
-                |> Measurement.feetToRawPixels
-    in
-        Collage.rect (toFloat width) (toFloat height)
-            |> Collage.filled Color.blue
-            |> List.singleton
-            |> Collage.collage width height
 
 
 twinHeight : Feet
@@ -462,7 +421,7 @@ viewGameState state =
                 (\wolfPos ->
                     positionAt viewport (Coordinate.toScreen viewport wolfPos) wolf
                 )
-                state.wolves
+                (River.wolves state.river)
                 |> Element.layers
 
         obstacles =
@@ -470,13 +429,13 @@ viewGameState state =
                 (\logPos ->
                     positionAt viewport (Coordinate.toScreen viewport logPos) log
                 )
-                state.logs
+                (River.logs state.river)
                 |> Element.layers
 
         renderedRiver =
             positionAt viewport
-                (Coordinate.toScreen viewport state.riverPosition)
-                (river viewport state.riverPosition)
+                (Coordinate.toScreen viewport state.river.position)
+                (River.render state.river)
     in
         Element.layers [ nature, renderedRiver, boys, obstacles, wolves ]
             |> Element.toHtml
