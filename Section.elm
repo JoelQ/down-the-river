@@ -2,6 +2,8 @@ module Section
     exposing
         ( Section
         , Block
+        , Savepoint(..)
+        , ObstacleArrangement(..)
         , empty
         , first
         , width
@@ -35,9 +37,9 @@ type ObstacleArrangement
 
 
 type Savepoint
-    = Top
-    | Bottom
-    | NoSave
+    = TopWolf
+    | BottomWolf
+    | NoWolf
 
 
 width : Section -> Feet
@@ -54,7 +56,7 @@ width section =
 
 empty : Section
 empty =
-    { save = NoSave
+    { save = NoWolf
     , b1 = ClearWater
     , b2 = ClearWater
     , b3 = ClearWater
@@ -65,7 +67,7 @@ empty =
 
 first : Section
 first =
-    { save = Top
+    { save = TopWolf
     , b1 = OneTop
     , b2 = OneBottom
     , b3 = ClearWater
@@ -111,10 +113,10 @@ wolfPosition offset block =
             20
     in
         case block of
-            SaveBlock Top ->
+            SaveBlock TopWolf ->
                 Just <| Coordinate.world xPosition top
 
-            SaveBlock Bottom ->
+            SaveBlock BottomWolf ->
                 Just <| Coordinate.world xPosition bottom
 
             _ ->

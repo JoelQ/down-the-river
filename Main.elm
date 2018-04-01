@@ -11,6 +11,7 @@ import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
 import Time exposing (Time)
 import River exposing (River)
+import River.Random
 
 
 type Model
