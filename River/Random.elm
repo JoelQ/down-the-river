@@ -9,12 +9,12 @@ import Random.Lookback
 section : ObstacleArrangement -> Generator Section
 section arr =
     Random.Lookback.constant arr Section
-        |> Random.Lookback.andMap savepoint
-        |> Random.Lookback.andMapBoth obstacleArrangement
-        |> Random.Lookback.andMapBoth obstacleArrangement
-        |> Random.Lookback.andMapBoth obstacleArrangement
-        |> Random.Lookback.andMapList obstacleList
-        |> Random.Lookback.andMapBoth obstacleArrangement
+        |> Random.Lookback.myFunAnon savepoint
+        |> Random.Lookback.myFun obstacleArrangement
+        |> Random.Lookback.myFun obstacleArrangement
+        |> Random.Lookback.myFun obstacleArrangement
+        |> Random.Lookback.myFunList obstacleList
+        |> Random.Lookback.myFun obstacleArrangement
         |> Random.Lookback.toNormalGenerator
 
 
