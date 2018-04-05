@@ -3,18 +3,19 @@ module River.Random exposing (section)
 import Section exposing (Section, ObstacleArrangement(..), Savepoint(..))
 import Random exposing (Generator)
 import Random.Extra
+import Random.Lookback
 
 
 section : ObstacleArrangement -> Generator Section
 section arr =
-    Random.Extra.constant Section
-        |> Random.andThen (\f -> Random.map f savepoint)
-        |> Random.andThen (\f -> Random.map (\obs -> ( obs, f obs )) <| obstacleArrangement arr)
-        |> Random.andThen (\( prev, f ) -> Random.map (\obs -> ( obs, f obs )) <| obstacleArrangement prev)
-        |> Random.andThen (\( prev, f ) -> Random.map (\obs -> ( obs, f obs )) <| obstacleArrangement prev)
-        |> Random.andThen (\( prev, f ) -> Random.map (\list -> ( List.head list |> Maybe.withDefault prev, f list )) <| obstacleList prev)
-        |> Random.andThen (\( prev, f ) -> Random.map (\obs -> ( obs, f obs )) <| obstacleArrangement prev)
-        |> Random.map Tuple.second
+    Random.Lookback.constant arr Section
+        |> Random.Lookback.andMap savepoint
+        |> Random.Lookback.andMapBoth obstacleArrangement
+        |> Random.Lookback.andMapBoth obstacleArrangement
+        |> Random.Lookback.andMapBoth obstacleArrangement
+        |> Random.Lookback.andMapList obstacleList
+        |> Random.Lookback.andMapBoth obstacleArrangement
+        |> Random.Lookback.toNormalGenerator
 
 
 obstacleList : ObstacleArrangement -> Generator (List ObstacleArrangement)
