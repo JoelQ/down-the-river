@@ -10,8 +10,10 @@ import Html exposing (Html)
 import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
 import Time exposing (Time)
+import Random
 import River exposing (River)
 import River.Random
+import Section exposing (ObstacleArrangement(..), Section)
 
 
 type Model
@@ -75,6 +77,7 @@ viewportWidth =
 type Msg
     = Tick Time
     | Move YDirection
+    | NewSection Section
 
 
 initialModel : Model
@@ -103,6 +106,24 @@ update msg model =
 
         Move direction ->
             move direction model
+
+        NewSection section ->
+            appendNewSection section model
+
+
+appendNewSection : Section -> Model -> ( Model, Cmd a )
+appendNewSection section model =
+    case model of
+        Won _ ->
+            model |> withNoCmd
+
+        Lost _ ->
+            model |> withNoCmd
+
+        Playing state ->
+            { state | river = River.appendSection section state.river }
+                |> Playing
+                |> withNoCmd
 
 
 move : YDirection -> Model -> ( Model, Cmd Msg )
@@ -152,9 +173,12 @@ generateNewSectionsIfNecessary model =
 
                 needToGenerateDistance =
                     50
+
+                cmd =
+                    Random.generate NewSection (River.Random.section ClearWater)
             in
                 if distance < needToGenerateDistance then
-                    model |> withNoCmd
+                    ( model, cmd )
                 else
                     model |> withNoCmd
 

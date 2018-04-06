@@ -1,4 +1,14 @@
-module River exposing (River, accross, render, initial, logs, wolves, eastEdge)
+module River
+    exposing
+        ( River
+        , accross
+        , render
+        , initial
+        , logs
+        , wolves
+        , eastEdge
+        , appendSection
+        )
 
 import Collage
 import Color
@@ -19,6 +29,11 @@ initial =
     { position = Coordinate.world 0 30
     , sections = [ Section.empty, Section.first ]
     }
+
+
+appendSection : Section -> River -> River
+appendSection section river =
+    { river | sections = river.sections ++ [ section ] }
 
 
 logs : River -> List Coordinate.World
