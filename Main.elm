@@ -190,12 +190,12 @@ withNoCmd value =
 
 riverFeetPerSecond : Feet
 riverFeetPerSecond =
-    Feet 10
+    Feet 25
 
 
 twinsFeetPerSecond : Feet
 twinsFeetPerSecond =
-    Feet 5
+    Feet 20
 
 
 distanceTravelledInInterval : Feet -> Time -> Float
