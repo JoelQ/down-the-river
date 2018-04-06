@@ -1,4 +1,4 @@
-module River exposing (River, accross, render, initial, logs, wolves)
+module River exposing (River, accross, render, initial, logs, wolves, eastEdge)
 
 import Collage
 import Color
@@ -46,6 +46,16 @@ blocks { sections } =
 accross : Feet
 accross =
     Feet 30
+
+
+eastEdge : River -> Coordinate.World
+eastEdge river =
+    let
+        (Feet x) =
+            riverWidth river
+    in
+        river.position
+            |> Coordinate.moveBy (toFloat x) 0
 
 
 riverWidth : River -> Feet

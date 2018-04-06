@@ -11,7 +11,7 @@ module Coordinate
         , screenY
         , moveBy
         , toScreen
-        , distanceBetwen
+        , distanceBetween
         )
 
 import Euclid.Vector as Vector
@@ -122,8 +122,8 @@ objectVector (Object position) =
 -- QUERYING
 
 
-distanceBetwen : World -> World -> Feet
-distanceBetwen (World p1) (World p2) =
+distanceBetween : World -> World -> Feet
+distanceBetween (World p1) (World p2) =
     Vector.subtract p1 p2
         |> Vector.abs
         |> round

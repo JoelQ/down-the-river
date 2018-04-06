@@ -125,13 +125,37 @@ tick diff model =
                 |> moveTwinsDownstream diff
                 |> checkLoseCondition
                 |> andThen checkArrivalOnBank
-                |> withNoCmd
+                |> generateNewSectionsIfNecessary
 
         Lost _ ->
             model |> withNoCmd
 
         Won _ ->
             model |> withNoCmd
+
+
+generateNewSectionsIfNecessary : Model -> ( Model, Cmd Msg )
+generateNewSectionsIfNecessary model =
+    case model of
+        Won _ ->
+            model |> withNoCmd
+
+        Lost _ ->
+            model |> withNoCmd
+
+        Playing state ->
+            let
+                (Feet distance) =
+                    Coordinate.distanceBetween state.twinPosition
+                        (River.eastEdge state.river)
+
+                needToGenerateDistance =
+                    50
+            in
+                if distance < needToGenerateDistance then
+                    model |> withNoCmd
+                else
+                    model |> withNoCmd
 
 
 withNoCmd : a -> ( a, Cmd msg )
@@ -229,7 +253,7 @@ closeEnough : Coordinate.World -> Coordinate.World -> Bool
 closeEnough twins wolf =
     let
         (Feet distance) =
-            Coordinate.distanceBetwen twins wolf
+            Coordinate.distanceBetween twins wolf
 
         (Feet max) =
             maxDistanceToWolf
