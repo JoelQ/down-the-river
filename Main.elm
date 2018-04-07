@@ -91,7 +91,12 @@ type Msg
 
 initialTwinPosition : Coordinate.World
 initialTwinPosition =
-    Coordinate.world 41 41
+    let
+        (Feet width) =
+            viewportWidth
+                |> Measurement.pixelsToFeet
+    in
+        Coordinate.world (toFloat <| width // 2) 41
 
 
 initialGameState : GameState
@@ -123,20 +128,17 @@ update msg model =
             startGame model
 
 
-startGame : Model -> ( Model, Cmd a )
+startGame : Model -> ( Model, Cmd Msg )
 startGame model =
     case model of
         Intro ->
-            Playing initialGameState
-                |> withNoCmd
+            ( Playing initialGameState, generateNewSection )
 
         Lost _ _ ->
-            Playing initialGameState
-                |> withNoCmd
+            ( Playing initialGameState, generateNewSection )
 
         Won _ ->
-            Playing initialGameState
-                |> withNoCmd
+            ( Playing initialGameState, generateNewSection )
 
         Playing _ ->
             model |> withNoCmd
@@ -181,6 +183,11 @@ tick diff model =
             model |> withNoCmd
 
 
+generateNewSection : Cmd Msg
+generateNewSection =
+    Random.generate NewSection (River.Random.section ClearWater)
+
+
 generateNewSectionsIfNecessary : Model -> ( Model, Cmd Msg )
 generateNewSectionsIfNecessary model =
     case model of
@@ -191,13 +198,10 @@ generateNewSectionsIfNecessary model =
                         (River.eastEdge state.river)
 
                 needToGenerateDistance =
-                    50
-
-                cmd =
-                    Random.generate NewSection (River.Random.section ClearWater)
+                    133
             in
                 if distance < needToGenerateDistance then
-                    ( model, cmd )
+                    ( model, generateNewSection )
                 else
                     model |> withNoCmd
 
