@@ -19,7 +19,8 @@ import Section exposing (ObstacleArrangement(..), Section)
 
 
 type Model
-    = Playing GameState
+    = Intro
+    | Playing GameState
     | Lost GameState LossReason
     | Won GameState
 
@@ -88,11 +89,6 @@ type Msg
     | StartGame
 
 
-initialModel : Model
-initialModel =
-    Playing initialGameState
-
-
 initialGameState : GameState
 initialGameState =
     { twinPosition = Coordinate.world 41 41
@@ -103,7 +99,7 @@ initialGameState =
 
 init : ( Model, Cmd Msg )
 init =
-    ( initialModel, Cmd.none )
+    ( Intro, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -125,6 +121,10 @@ update msg model =
 startGame : Model -> ( Model, Cmd a )
 startGame model =
     case model of
+        Intro ->
+            Playing initialGameState
+                |> withNoCmd
+
         Lost _ _ ->
             Playing initialGameState
                 |> withNoCmd
@@ -134,23 +134,19 @@ startGame model =
                 |> withNoCmd
 
         Playing _ ->
-            model
-                |> withNoCmd
+            model |> withNoCmd
 
 
 appendNewSection : Section -> Model -> ( Model, Cmd a )
 appendNewSection section model =
     case model of
-        Won _ ->
-            model |> withNoCmd
-
-        Lost _ _ ->
-            model |> withNoCmd
-
         Playing state ->
             { state | river = River.appendSection section state.river }
                 |> Playing
                 |> withNoCmd
+
+        _ ->
+            model |> withNoCmd
 
 
 move : YDirection -> Model -> ( Model, Cmd Msg )
@@ -176,22 +172,13 @@ tick diff model =
                 |> andThen checkArrivalOnBank
                 |> generateNewSectionsIfNecessary
 
-        Lost _ _ ->
-            model |> withNoCmd
-
-        Won _ ->
+        _ ->
             model |> withNoCmd
 
 
 generateNewSectionsIfNecessary : Model -> ( Model, Cmd Msg )
 generateNewSectionsIfNecessary model =
     case model of
-        Won _ ->
-            model |> withNoCmd
-
-        Lost _ _ ->
-            model |> withNoCmd
-
         Playing state ->
             let
                 (Feet distance) =
@@ -208,6 +195,9 @@ generateNewSectionsIfNecessary model =
                     ( model, cmd )
                 else
                     model |> withNoCmd
+
+        _ ->
+            model |> withNoCmd
 
 
 withNoCmd : a -> ( a, Cmd msg )
@@ -458,9 +448,22 @@ faded element =
         |> Element.opacity 0.5
 
 
+introBackground : Element
+introBackground =
+    Element.image 800 500 "images/tiberinus.jpg"
+        |> faded
+
+
 view : Model -> Html a
 view model =
     case model of
+        Intro ->
+            [ introBackground
+            , GameText.intro
+            ]
+                |> Element.layers
+                |> Element.toHtml
+
         Playing state ->
             viewGameState state
                 |> Element.toHtml
@@ -541,6 +544,9 @@ viewGameState state =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
+        Intro ->
+            Mouse.clicks (always StartGame)
+
         Lost _ _ ->
             Mouse.clicks (always StartGame)
 

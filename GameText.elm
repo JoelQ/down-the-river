@@ -1,4 +1,10 @@
-module GameText exposing (strandedOnShoreScreen, hitObstacleScreen, winScreen)
+module GameText
+    exposing
+        ( strandedOnShoreScreen
+        , hitObstacleScreen
+        , winScreen
+        , intro
+        )
 
 import Element exposing (Element)
 import Text exposing (defaultStyle)
@@ -59,6 +65,14 @@ centerHorizontally element =
 -- CONTENT
 
 
+intro : Element
+intro =
+    display
+        [ standardText introMessage
+        , standardText startMessage
+        ]
+
+
 winScreen : Element
 winScreen =
     display
@@ -84,6 +98,20 @@ strandedOnShoreScreen =
         , standardText strandedOnShoreMessage
         , standardText restartMessage
         ]
+
+
+introMessage : String
+introMessage =
+    """
+    You are Tiberinus, spirit of the river Tiber.
+
+    The evil king Amalius hopes to get rid of his nephews Romulus and
+    Remus by setting the twins adrift on the river in a basket.
+    Surely some terrible accident will befall them.
+
+    Not so fast! You decide to act. Guide the basket around the obstacles.
+    The twins need care and nurture, perhaps a friendly wolf...
+    """
 
 
 winMessage : String
@@ -114,3 +142,8 @@ strandedOnShoreMessage =
 restartMessage : String
 restartMessage =
     "Click anywhere to play again..."
+
+
+startMessage : String
+startMessage =
+    "Click anywhere to start playing..."
