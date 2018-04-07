@@ -46,7 +46,13 @@ textStyle =
 display : List Element -> Element
 display texts =
     texts
+        |> List.map centerHorizontally
         |> Element.flow Element.down
+
+
+centerHorizontally : Element -> Element
+centerHorizontally element =
+    Element.container 800 (Element.heightOf element) Element.middle element
 
 
 
