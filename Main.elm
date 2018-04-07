@@ -6,7 +6,7 @@ import Collision
 import Color
 import Coordinate exposing (Viewport)
 import Element exposing (Element)
-import Text exposing (defaultStyle)
+import GameText
 import Html exposing (Html)
 import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
@@ -437,63 +437,6 @@ faded element =
         |> Element.opacity 0.5
 
 
-wonText : String
-wonText =
-    """
-  The wolf takes in the twins and cares for them. The gods must destine
-  them for greatness!
-  """
-
-
-hitObstacleText : String
-hitObstacleText =
-    """
-  Your fragile basket hits an obstacle in the river, drowning the twins.
-  It seems the omens where wrong this time. These boys will never
-  amount to much.
-  """
-
-
-strandedOnShoreText : String
-strandedOnShoreText =
-    """
-  Your basket washes up on shore. Unfortunately no one notices,
-  sealing the twins' fate. Amulius' nefarious plan has succeeded.
-  """
-
-
-header : String -> Element
-header string =
-    string
-        |> Text.fromString
-        |> Text.style headerStyle
-        |> Element.centered
-
-
-standardText : String -> Element
-standardText string =
-    string
-        |> Text.fromString
-        |> Text.style textStyle
-        |> Element.centered
-
-
-headerStyle : Text.Style
-headerStyle =
-    { defaultStyle
-        | height = Just 55
-        , typeface = [ "Helvetica", "Arial", "sans-serif" ]
-    }
-
-
-textStyle : Text.Style
-textStyle =
-    { defaultStyle
-        | height = Just 25
-        , typeface = [ "Helvetica", "Arial", "sans-serif" ]
-    }
-
-
 view : Model -> Html a
 view model =
     case model of
@@ -503,21 +446,21 @@ view model =
 
         Lost state StrandedOnShore ->
             [ viewGameState state |> faded
-            , [ header "You lost!", standardText strandedOnShoreText ] |> Element.flow Element.down
+            , GameText.strandedOnShoreScreen
             ]
                 |> Element.layers
                 |> Element.toHtml
 
         Lost state HitObstacle ->
             [ viewGameState state |> faded
-            , [ header "You lost!", standardText hitObstacleText ] |> Element.flow Element.down
+            , GameText.hitObstacleScreen
             ]
                 |> Element.layers
                 |> Element.toHtml
 
         Won state ->
             [ viewGameState state |> faded
-            , [ header "You won!", standardText wonText ] |> Element.flow Element.down
+            , GameText.winScreen
             ]
                 |> Element.layers
                 |> Element.toHtml
