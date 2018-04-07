@@ -158,15 +158,10 @@ move direction game =
 
 tick : Time -> Game -> Game
 tick diff game =
-    case game of
-        Playing state ->
-            state
-                |> moveTwinsDownstream diff
-                |> checkLoseCondition
-                |> andThen checkArrivalOnBank
-
-        _ ->
-            game
+    game
+        |> map (moveTwinsDownstream diff)
+        |> andThen checkLoseCondition
+        |> andThen checkArrivalOnBank
 
 
 
@@ -295,7 +290,17 @@ distanceTravelled { twinPosition } =
 
 
 
--- MONOMORPHIC MONAD??!!
+-- MONOMORPHIC FUNCTOR & MONAD??!!
+
+
+map : (State -> State) -> Game -> Game
+map func game =
+    case game of
+        Playing state ->
+            Playing (func state)
+
+        _ ->
+            game
 
 
 andThen : (State -> Game) -> Game -> Game
