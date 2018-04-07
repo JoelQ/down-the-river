@@ -13,14 +13,14 @@ module Game
         , viewportFor
         )
 
-import River exposing (River)
+import Collision
 import Coordinate exposing (Viewport)
+import Log
 import Measurement exposing (Feet(..), Pixels(..))
+import River exposing (River)
 import Section exposing (Section)
 import Time exposing (Time)
 import Twins
-import Log
-import Collision
 
 
 type Game

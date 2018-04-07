@@ -2,25 +2,24 @@ module Main exposing (main)
 
 import AnimationFrame
 import Collage
-import Collision
 import Color
 import Coordinate exposing (Viewport)
 import Element exposing (Element)
+import Game exposing (Game(..), YDirection(..), LossReason(..))
 import GameText
 import Html exposing (Html)
 import Keyboard
+import Log
 import Measurement exposing (Feet(..), Pixels(..))
 import Mouse
-import Time exposing (Time)
 import Random
-import River exposing (River)
 import Renderable
+import River exposing (River)
 import River.Random
 import Section exposing (ObstacleArrangement(..), Section)
-import Wolf
+import Time exposing (Time)
 import Twins
-import Log
-import Game exposing (Game(..), YDirection(..), LossReason(..))
+import Wolf
 
 
 type alias Model =
