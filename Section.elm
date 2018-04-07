@@ -110,7 +110,7 @@ wolfPosition offset block =
             60
 
         bottom =
-            20
+            23
     in
         case block of
             SaveBlock TopWolf ->

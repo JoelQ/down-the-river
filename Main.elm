@@ -277,7 +277,7 @@ checkLoseCondition ({ twinPosition, river } as state) =
 
 maxDistanceToWolf : Feet
 maxDistanceToWolf =
-    Feet 10
+    Feet 15
 
 
 checkArrivalOnBank : GameState -> Model
