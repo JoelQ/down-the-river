@@ -20,171 +20,43 @@ import Section exposing (ObstacleArrangement(..), Section)
 import Wolf
 import Twins
 import Log
+import Game exposing (Game(..), YDirection(..), LossReason(..))
 
 
-type Model
-    = Intro
-    | Playing GameState
-    | Lost GameState LossReason
-    | Won GameState
-
-
-type LossReason
-    = HitObstacle
-    | StrandedOnShore
-
-
-type YDirection
-    = Up
-    | Down
-    | Drifting
-
-
-type alias GameState =
-    { river : River
-    , twinPosition : Coordinate.World
-    , yDirection : YDirection
-    }
-
-
-initialViewport : Viewport
-initialViewport =
-    { position = Coordinate.world 0 0
-    , width = viewportWidth
-    , height = viewportHeight
-    }
-
-
-viewportFor : Coordinate.World -> Viewport
-viewportFor twinPosition =
-    let
-        twinX =
-            Coordinate.worldX twinPosition
-
-        widthInFeet =
-            Measurement.pixelsToFeet viewportWidth
-
-        halfViewport =
-            (toFloat <| Measurement.rawFeet widthInFeet) / 2
-
-        edgeX =
-            twinX - halfViewport
-    in
-        { position = Coordinate.world edgeX 0
-        , width = viewportWidth
-        , height = viewportHeight
-        }
-
-
-viewportHeight : Pixels
-viewportHeight =
-    Pixels 500
-
-
-viewportWidth : Pixels
-viewportWidth =
-    Pixels 800
+type alias Model =
+    Game
 
 
 type Msg
     = Tick Time
-    | Move YDirection
+    | Move Game.YDirection
     | NewSection Section
     | StartGame
 
 
-initialTwinPosition : Coordinate.World
-initialTwinPosition =
-    let
-        (Feet width) =
-            viewportWidth
-                |> Measurement.pixelsToFeet
-    in
-        Coordinate.world (toFloat <| width // 2) 41
-
-
-initialGameState : GameState
-initialGameState =
-    { twinPosition = initialTwinPosition
-    , river = River.initial
-    , yDirection = Drifting
-    }
-
-
 init : ( Model, Cmd Msg )
 init =
-    ( Intro, Cmd.none )
+    ( Game.intro, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick diff ->
-            tick diff model
-
-        Move direction ->
-            move direction model
-
-        NewSection section ->
-            appendNewSection section model
-
-        StartGame ->
-            startGame model
-
-
-startGame : Model -> ( Model, Cmd Msg )
-startGame model =
-    case model of
-        Intro ->
-            ( Playing initialGameState, generateNewSection )
-
-        Lost _ _ ->
-            ( Playing initialGameState, generateNewSection )
-
-        Won _ ->
-            ( Playing initialGameState, generateNewSection )
-
-        Playing _ ->
-            model |> withNoCmd
-
-
-appendNewSection : Section -> Model -> ( Model, Cmd a )
-appendNewSection section model =
-    case model of
-        Playing state ->
-            { state | river = River.appendSection section state.river }
-                |> Playing
-                |> withNoCmd
-
-        _ ->
-            model |> withNoCmd
-
-
-move : YDirection -> Model -> ( Model, Cmd Msg )
-move direction model =
-    case model of
-        Playing state ->
-            { state | yDirection = direction }
-                |> Playing
-                |> withNoCmd
-
-        _ ->
-            model
-                |> withNoCmd
-
-
-tick : Time -> Model -> ( Model, Cmd Msg )
-tick diff model =
-    case model of
-        Playing state ->
-            state
-                |> moveTwinsDownstream diff
-                |> checkLoseCondition
-                |> andThen checkArrivalOnBank
+            Game.tick diff model
                 |> generateNewSectionsIfNecessary
 
-        _ ->
-            model |> withNoCmd
+        Move direction ->
+            Game.move direction model
+                |> withNoCmd
+
+        NewSection section ->
+            Game.appendNewSection section model
+                |> withNoCmd
+
+        StartGame ->
+            Game.start model
+                |> withNoCmd
 
 
 generateNewSection : Cmd Msg
@@ -216,128 +88,6 @@ generateNewSectionsIfNecessary model =
 withNoCmd : a -> ( a, Cmd msg )
 withNoCmd value =
     ( value, Cmd.none )
-
-
-baseRiverFeetPerSecond : Feet
-baseRiverFeetPerSecond =
-    Feet 25
-
-
-riverFeetPerSecond : GameState -> Feet
-riverFeetPerSecond state =
-    ((Measurement.rawFeet <| distanceTravelled state) // 20)
-        |> Feet
-        |> Measurement.addFeet baseRiverFeetPerSecond
-
-
-twinsFeetPerSecond : Feet
-twinsFeetPerSecond =
-    Feet 20
-
-
-distanceTravelledInInterval : Feet -> Time -> Float
-distanceTravelledInInterval (Feet distanceSecond) diff =
-    (Time.inSeconds diff) * (toFloat distanceSecond)
-
-
-moveTwinsDownstream : Time -> GameState -> GameState
-moveTwinsDownstream diff state =
-    let
-        downstreamDistance =
-            distanceTravelledInInterval (riverFeetPerSecond state) diff
-
-        accrossDistance =
-            case state.yDirection of
-                Up ->
-                    distanceTravelledInInterval twinsFeetPerSecond diff
-
-                Down ->
-                    distanceTravelledInInterval twinsFeetPerSecond diff
-                        |> negate
-
-                Drifting ->
-                    0
-
-        newPosition =
-            state.twinPosition
-                |> Coordinate.moveBy downstreamDistance accrossDistance
-    in
-        { state | twinPosition = newPosition }
-
-
-andThen : (GameState -> Model) -> Model -> Model
-andThen func game =
-    case game of
-        Playing state ->
-            func state
-
-        _ ->
-            game
-
-
-checkLoseCondition : GameState -> Model
-checkLoseCondition ({ twinPosition, river } as state) =
-    let
-        obstacles =
-            List.map Log.toBoundingBox (River.logs river)
-
-        subject =
-            Twins.toBoundingBox twinPosition
-    in
-        if subject |> Collision.hasCollidedWithAny obstacles then
-            Lost state HitObstacle
-        else
-            Playing state
-
-
-maxDistanceToWolf : Feet
-maxDistanceToWolf =
-    Feet 15
-
-
-checkArrivalOnBank : GameState -> Model
-checkArrivalOnBank state =
-    if hasArrivedOnBank state then
-        if closeEnoughToWolf state then
-            Won state
-        else
-            Lost state StrandedOnShore
-    else
-        Playing state
-
-
-closeEnoughToWolf : GameState -> Bool
-closeEnoughToWolf state =
-    List.any (closeEnough state.twinPosition) (River.wolves state.river)
-
-
-closeEnough : Coordinate.World -> Coordinate.World -> Bool
-closeEnough twins wolf =
-    let
-        (Feet distance) =
-            Coordinate.distanceBetween twins wolf
-
-        (Feet max) =
-            maxDistanceToWolf
-    in
-        distance < max
-
-
-hasArrivedOnBank : GameState -> Bool
-hasArrivedOnBank { twinPosition, river } =
-    let
-        northBank =
-            Coordinate.worldY river.position
-
-        southBank =
-            (Coordinate.worldY river.position)
-                + (toFloat <| Measurement.rawFeet River.accross)
-
-        twins =
-            Twins.toBoundingBox twinPosition
-    in
-        (twins |> Collision.hasCrossedHorizontalLine northBank)
-            || (twins |> Collision.hasCrossedHorizontalLine southBank)
 
 
 background : Viewport -> Collage.Form
@@ -395,7 +145,7 @@ view model =
 
         Won state ->
             [ viewGameState state |> faded
-            , GameText.winScreen (distanceTravelled state)
+            , GameText.winScreen (Game.distanceTravelled state)
             ]
                 |> Element.layers
                 |> Element.toHtml
@@ -416,11 +166,11 @@ viewNature viewport =
             ]
 
 
-viewGameState : GameState -> Element
+viewGameState : Game.State -> Element
 viewGameState state =
     let
         viewport =
-            viewportFor state.twinPosition
+            Game.viewportFor state.twinPosition
 
         nature =
             viewNature viewport
@@ -450,7 +200,7 @@ viewGameState state =
                 (River.render state.river)
 
         status =
-            GameText.distanceTravelled (distanceTravelled state)
+            GameText.distanceTravelled (Game.distanceTravelled state)
     in
         Element.layers
             [ nature
@@ -460,11 +210,6 @@ viewGameState state =
             , wolves
             , status
             ]
-
-
-distanceTravelled : GameState -> Feet
-distanceTravelled { twinPosition } =
-    Coordinate.xDistanceBetween twinPosition initialTwinPosition
 
 
 subscriptions : Model -> Sub Msg
