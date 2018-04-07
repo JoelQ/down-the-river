@@ -4,6 +4,7 @@ module GameText
         , hitObstacleScreen
         , winScreen
         , intro
+        , distanceTravelled
         )
 
 import Element exposing (Element)
@@ -62,8 +63,20 @@ centerHorizontally element =
     Element.container 800 (Element.heightOf element) Element.middle element
 
 
+cornerText : Element -> Element
+cornerText element =
+    Element.container 800 500 Element.topRight element
+
+
 
 -- CONTENT
+
+
+distanceTravelled : Feet -> Element
+distanceTravelled (Feet distance) =
+    (toString distance ++ " feet")
+        |> standardText
+        |> cornerText
 
 
 intro : Element

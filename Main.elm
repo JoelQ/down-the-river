@@ -489,8 +489,7 @@ view model =
 
         Won state ->
             [ viewGameState state |> faded
-            , (Coordinate.xDistanceBetween state.twinPosition initialTwinPosition)
-                |> GameText.winScreen
+            , GameText.winScreen (distanceTravelled state)
             ]
                 |> Element.layers
                 |> Element.toHtml
@@ -543,8 +542,23 @@ viewGameState state =
             positionAt viewport
                 (Coordinate.toScreen viewport state.river.position)
                 (River.render state.river)
+
+        status =
+            GameText.distanceTravelled (distanceTravelled state)
     in
-        Element.layers [ nature, renderedRiver, boys, obstacles, wolves ]
+        Element.layers
+            [ nature
+            , renderedRiver
+            , boys
+            , obstacles
+            , wolves
+            , status
+            ]
+
+
+distanceTravelled : GameState -> Feet
+distanceTravelled { twinPosition } =
+    Coordinate.xDistanceBetween twinPosition initialTwinPosition
 
 
 subscriptions : Model -> Sub Msg
