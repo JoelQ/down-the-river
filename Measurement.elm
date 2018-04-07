@@ -7,6 +7,7 @@ module Measurement
         , feetToPixels
         , feetToRawPixels
         , rawFeet
+        , rawPixels
         , addFeet
         , timesUnits
         )

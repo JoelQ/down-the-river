@@ -14,8 +14,12 @@ import Mouse
 import Time exposing (Time)
 import Random
 import River exposing (River)
+import Renderable
 import River.Random
 import Section exposing (ObstacleArrangement(..), Section)
+import Wolf
+import Twins
+import Log
 
 
 type Model
@@ -275,10 +279,10 @@ checkLoseCondition : GameState -> Model
 checkLoseCondition ({ twinPosition, river } as state) =
     let
         obstacles =
-            List.map logToBoundingBox (River.logs river)
+            List.map Log.toBoundingBox (River.logs river)
 
         subject =
-            twinsToBoundingBox twinPosition
+            Twins.toBoundingBox twinPosition
     in
         if subject |> Collision.hasCollidedWithAny obstacles then
             Lost state HitObstacle
@@ -330,26 +334,10 @@ hasArrivedOnBank { twinPosition, river } =
                 + (toFloat <| Measurement.rawFeet River.accross)
 
         twins =
-            twinsToBoundingBox twinPosition
+            Twins.toBoundingBox twinPosition
     in
         (twins |> Collision.hasCrossedHorizontalLine northBank)
             || (twins |> Collision.hasCrossedHorizontalLine southBank)
-
-
-logToBoundingBox : Coordinate.World -> Collision.BoundingBox
-logToBoundingBox position =
-    { position = position
-    , width = logWidth
-    , height = logHeight
-    }
-
-
-twinsToBoundingBox : Coordinate.World -> Collision.BoundingBox
-twinsToBoundingBox position =
-    { position = position
-    , width = twinWidth
-    , height = twinHeight
-    }
 
 
 background : Viewport -> Collage.Form
@@ -363,90 +351,6 @@ background viewport =
     in
         Collage.rect (toFloat width) (toFloat height)
             |> Collage.filled Color.green
-
-
-twinHeight : Feet
-twinHeight =
-    Feet 5
-
-
-twinWidth : Feet
-twinWidth =
-    Feet 6
-
-
-twins : Element
-twins =
-    let
-        width =
-            Measurement.feetToRawPixels twinWidth
-
-        height =
-            Measurement.feetToRawPixels twinHeight
-    in
-        Element.image width height "images/twins.png"
-
-
-logWidth : Feet
-logWidth =
-    Feet 10
-
-
-logHeight : Feet
-logHeight =
-    Feet 4
-
-
-log : Element
-log =
-    let
-        width =
-            Measurement.feetToRawPixels logWidth
-
-        height =
-            Measurement.feetToRawPixels logHeight
-    in
-        Element.image width height "images/log.png"
-
-
-wolfWidth : Feet
-wolfWidth =
-    Feet 6
-
-
-wolfHeight : Feet
-wolfHeight =
-    Feet 8
-
-
-wolf : Element
-wolf =
-    let
-        width =
-            Measurement.feetToRawPixels wolfWidth
-
-        height =
-            Measurement.feetToRawPixels wolfHeight
-    in
-        Element.image width height "images/wolf.png"
-
-
-positionAt : Viewport -> Coordinate.Screen -> Element -> Element
-positionAt viewport position element =
-    let
-        x =
-            Element.absolute (Coordinate.screenX position)
-
-        y =
-            Element.absolute (Coordinate.screenY position)
-
-        (Pixels width) =
-            viewport.width
-
-        (Pixels height) =
-            viewport.height
-    in
-        Element.container width height (Element.bottomLeftAt x y) element
 
 
 faded : Element -> Element
@@ -522,12 +426,12 @@ viewGameState state =
             viewNature viewport
 
         boys =
-            positionAt viewport (Coordinate.toScreen viewport state.twinPosition) twins
+            Renderable.render viewport (Twins.toRenderable state.twinPosition)
 
         wolves =
             List.map
                 (\wolfPos ->
-                    positionAt viewport (Coordinate.toScreen viewport wolfPos) wolf
+                    Renderable.render viewport (Wolf.toRenderable wolfPos)
                 )
                 (River.wolves state.river)
                 |> Element.layers
@@ -535,13 +439,13 @@ viewGameState state =
         obstacles =
             List.map
                 (\logPos ->
-                    positionAt viewport (Coordinate.toScreen viewport logPos) log
+                    Renderable.render viewport (Log.toRenderable logPos)
                 )
                 (River.logs state.river)
                 |> Element.layers
 
         renderedRiver =
-            positionAt viewport
+            Renderable.positionAt viewport
                 (Coordinate.toScreen viewport state.river.position)
                 (River.render state.river)
 
