@@ -89,9 +89,14 @@ type Msg
     | StartGame
 
 
+initialTwinPosition : Coordinate.World
+initialTwinPosition =
+    Coordinate.world 41 41
+
+
 initialGameState : GameState
 initialGameState =
-    { twinPosition = Coordinate.world 41 41
+    { twinPosition = initialTwinPosition
     , river = River.initial
     , yDirection = Drifting
     }
@@ -484,7 +489,8 @@ view model =
 
         Won state ->
             [ viewGameState state |> faded
-            , GameText.winScreen
+            , (Coordinate.xDistanceBetween state.twinPosition initialTwinPosition)
+                |> GameText.winScreen
             ]
                 |> Element.layers
                 |> Element.toHtml

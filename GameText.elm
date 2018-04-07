@@ -8,6 +8,7 @@ module GameText
 
 import Element exposing (Element)
 import Text exposing (defaultStyle)
+import Measurement exposing (Feet(..))
 
 
 -- UTILITY
@@ -73,10 +74,11 @@ intro =
         ]
 
 
-winScreen : Element
-winScreen =
+winScreen : Feet -> Element
+winScreen (Feet distance) =
     display
         [ header "You win!"
+        , header <| "You travelled " ++ (toString distance) ++ " feet!"
         , standardText winMessage
         , standardText restartMessage
         ]

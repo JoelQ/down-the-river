@@ -12,6 +12,7 @@ module Coordinate
         , moveBy
         , toScreen
         , distanceBetween
+        , xDistanceBetween
         )
 
 import Euclid.Vector as Vector
@@ -126,5 +127,12 @@ distanceBetween : World -> World -> Feet
 distanceBetween (World p1) (World p2) =
     Vector.subtract p1 p2
         |> Vector.abs
+        |> round
+        |> Feet
+
+
+xDistanceBetween : World -> World -> Feet
+xDistanceBetween (World p1) (World p2) =
+    (p1.x - p2.x)
         |> round
         |> Feet
