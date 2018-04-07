@@ -214,9 +214,16 @@ withNoCmd value =
     ( value, Cmd.none )
 
 
-riverFeetPerSecond : Feet
-riverFeetPerSecond =
+baseRiverFeetPerSecond : Feet
+baseRiverFeetPerSecond =
     Feet 25
+
+
+riverFeetPerSecond : GameState -> Feet
+riverFeetPerSecond state =
+    ((Measurement.rawFeet <| distanceTravelled state) // 20)
+        |> Feet
+        |> Measurement.addFeet baseRiverFeetPerSecond
 
 
 twinsFeetPerSecond : Feet
@@ -233,7 +240,7 @@ moveTwinsDownstream : Time -> GameState -> GameState
 moveTwinsDownstream diff state =
     let
         downstreamDistance =
-            distanceTravelledInInterval riverFeetPerSecond diff
+            distanceTravelledInInterval (riverFeetPerSecond state) diff
 
         accrossDistance =
             case state.yDirection of
