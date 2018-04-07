@@ -19,8 +19,13 @@ import Section exposing (ObstacleArrangement(..), Section)
 
 type Model
     = Playing GameState
-    | Lost GameState
+    | Lost GameState LossReason
     | Won GameState
+
+
+type LossReason
+    = HitObstacle
+    | StrandedOnShore
 
 
 type YDirection
@@ -118,7 +123,7 @@ appendNewSection section model =
         Won _ ->
             model |> withNoCmd
 
-        Lost _ ->
+        Lost _ _ ->
             model |> withNoCmd
 
         Playing state ->
@@ -150,7 +155,7 @@ tick diff model =
                 |> andThen checkArrivalOnBank
                 |> generateNewSectionsIfNecessary
 
-        Lost _ ->
+        Lost _ _ ->
             model |> withNoCmd
 
         Won _ ->
@@ -163,7 +168,7 @@ generateNewSectionsIfNecessary model =
         Won _ ->
             model |> withNoCmd
 
-        Lost _ ->
+        Lost _ _ ->
             model |> withNoCmd
 
         Playing state ->
@@ -249,7 +254,7 @@ checkLoseCondition ({ twinPosition, river } as state) =
             twinsToBoundingBox twinPosition
     in
         if subject |> Collision.hasCollidedWithAny obstacles then
-            Lost state
+            Lost state HitObstacle
         else
             Playing state
 
@@ -265,7 +270,7 @@ checkArrivalOnBank state =
         if closeEnoughToWolf state then
             Won state
         else
-            Lost state
+            Lost state StrandedOnShore
     else
         Playing state
 
@@ -440,6 +445,23 @@ wonText =
   """
 
 
+hitObstacleText : String
+hitObstacleText =
+    """
+  Your fragile basket hits an obstacle in the river, drowning the twins.
+  It seems the omens where wrong this time. These boys will never
+  amount to much.
+  """
+
+
+strandedOnShoreText : String
+strandedOnShoreText =
+    """
+  Your basket washes up on shore. Unfortunately no one notices,
+  sealing the twins' fate. Amulius' nefarious plan has succeeded.
+  """
+
+
 header : String -> Element
 header string =
     string
@@ -479,8 +501,18 @@ view model =
             viewGameState state
                 |> Element.toHtml
 
-        Lost state ->
-            viewGameState state
+        Lost state StrandedOnShore ->
+            [ viewGameState state |> faded
+            , [ header "You lost!", standardText strandedOnShoreText ] |> Element.flow Element.down
+            ]
+                |> Element.layers
+                |> Element.toHtml
+
+        Lost state HitObstacle ->
+            [ viewGameState state |> faded
+            , [ header "You lost!", standardText hitObstacleText ] |> Element.flow Element.down
+            ]
+                |> Element.layers
                 |> Element.toHtml
 
         Won state ->
@@ -545,7 +577,7 @@ viewGameState state =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
-        Lost _ ->
+        Lost _ _ ->
             Sub.none
 
         Won _ ->
