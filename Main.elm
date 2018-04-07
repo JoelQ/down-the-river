@@ -377,20 +377,17 @@ twins =
         height =
             Measurement.feetToRawPixels twinHeight
     in
-        Collage.rect (toFloat width) (toFloat height)
-            |> Collage.filled Color.brown
-            |> List.singleton
-            |> Collage.collage width height
+        Element.image width height "images/twins.png"
 
 
 logWidth : Feet
 logWidth =
-    Feet 8
+    Feet 10
 
 
 logHeight : Feet
 logHeight =
-    Feet 5
+    Feet 4
 
 
 log : Element
@@ -402,20 +399,17 @@ log =
         height =
             Measurement.feetToRawPixels logHeight
     in
-        Collage.rect (toFloat width) (toFloat height)
-            |> Collage.filled Color.darkBrown
-            |> List.singleton
-            |> Collage.collage width height
+        Element.image width height "images/log.png"
 
 
 wolfWidth : Feet
 wolfWidth =
-    Feet 5
+    Feet 6
 
 
 wolfHeight : Feet
 wolfHeight =
-    Feet 7
+    Feet 8
 
 
 wolf : Element
@@ -427,10 +421,7 @@ wolf =
         height =
             Measurement.feetToRawPixels wolfHeight
     in
-        Collage.rect (toFloat width) (toFloat height)
-            |> Collage.filled Color.lightCharcoal
-            |> List.singleton
-            |> Collage.collage width height
+        Element.image width height "images/wolf.png"
 
 
 positionAt : Viewport -> Coordinate.Screen -> Element -> Element
