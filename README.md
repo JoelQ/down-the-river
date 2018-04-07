@@ -1,7 +1,7 @@
 # Down the River
 
 A side-scrolling obstacle avoidance game with procedurally-generated map. It is
-inspired by the myth of [Romulus and Remus].
+inspired by the myth of [Romulus and Remus]. Play it on [itch.io]!
 
 This is a submission for the [March/April gamejam] put on by the [Elm Slack]
 `#gamedev` channel. The theme was **randomness**.
@@ -13,6 +13,7 @@ theme!
 
 
 [Romulus and Remus]: https://en.wikipedia.org/wiki/Romulus_and_Remus
+[itch.io]: https://joelq.itch.io/down-the-river
 [Elm Slack]: https://elmlang.herokuapp.com/
 [March/April gamejam]: https://itch.io/jam/elm-game-jam-mar-apr-2018
 [Roman Mytholojam]: https://itch.io/jam/roman-mytholojam
