@@ -5,6 +5,7 @@ module GameText
         , winScreen
         , intro
         , distanceTravelled
+        , highscore
         )
 
 import Element exposing (Element)
@@ -63,9 +64,14 @@ centerHorizontally element =
     Element.container 800 (Element.heightOf element) Element.middle element
 
 
-cornerText : Element -> Element
-cornerText element =
+topRightCornerText : Element -> Element
+topRightCornerText element =
     Element.container 800 500 Element.topRight element
+
+
+topLeftCornerText : Element -> Element
+topLeftCornerText element =
+    Element.container 800 500 Element.topLeft element
 
 
 
@@ -76,7 +82,14 @@ distanceTravelled : Feet -> Element
 distanceTravelled (Feet distance) =
     (toString distance ++ " feet")
         |> standardText
-        |> cornerText
+        |> topRightCornerText
+
+
+highscore : Feet -> Element
+highscore (Feet distance) =
+    ("Highscore: " ++ toString distance ++ " feet")
+        |> standardText
+        |> topLeftCornerText
 
 
 intro : Element
@@ -87,11 +100,12 @@ intro =
         ]
 
 
-winScreen : Feet -> Element
-winScreen (Feet distance) =
+winScreen : Feet -> Feet -> Element
+winScreen (Feet distance) (Feet highscore) =
     display
         [ header "You win!"
         , header <| "You travelled " ++ (toString distance) ++ " feet!"
+        , standardText <| "Your highscore is: " ++ (toString highscore)
         , standardText winMessage
         , standardText restartMessage
         ]

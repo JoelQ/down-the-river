@@ -145,6 +145,7 @@ view model =
         Won state ->
             [ viewGameState state |> faded
             , GameText.winScreen (Game.distanceTravelled state)
+                (Game.highscore state)
             ]
                 |> Element.layers
                 |> Element.toHtml
@@ -200,6 +201,9 @@ viewGameState state =
 
         status =
             GameText.distanceTravelled (Game.distanceTravelled state)
+
+        highscore =
+            GameText.highscore (Game.highscore state)
     in
         Element.layers
             [ nature
@@ -208,6 +212,7 @@ viewGameState state =
             , obstacles
             , wolves
             , status
+            , highscore
             ]
 
 

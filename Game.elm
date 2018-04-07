@@ -11,6 +11,7 @@ module Game
         , distanceTravelled
         , tick
         , viewportFor
+        , highscore
         )
 
 import Collision
@@ -45,6 +46,7 @@ type alias State =
     { river : River
     , twinPosition : Coordinate.World
     , yDirection : YDirection
+    , scores : List Feet
     }
 
 
@@ -58,7 +60,13 @@ startState =
     { twinPosition = initialTwinPosition
     , river = River.initial
     , yDirection = Drifting
+    , scores = []
     }
+
+
+highscore : State -> Feet
+highscore { scores } =
+    List.foldl Measurement.maxFeet (Feet 0) scores
 
 
 initialTwinPosition : Coordinate.World
@@ -124,11 +132,11 @@ start game =
         Intro ->
             Playing startState
 
-        Lost _ _ ->
-            Playing startState
+        Lost oldState _ ->
+            Playing { startState | scores = oldState.scores }
 
-        Won _ ->
-            Playing startState
+        Won oldState ->
+            Playing { startState | scores = oldState.scores }
 
         Playing _ ->
             game
@@ -212,7 +220,7 @@ checkArrivalOnBank : State -> Game
 checkArrivalOnBank state =
     if hasArrivedOnBank state then
         if closeEnoughToWolf state then
-            Won state
+            Won { state | scores = (distanceTravelled state) :: state.scores }
         else
             Lost state StrandedOnShore
     else

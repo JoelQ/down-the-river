@@ -10,6 +10,7 @@ module Measurement
         , rawPixels
         , addFeet
         , timesUnits
+        , maxFeet
         )
 
 
@@ -59,3 +60,8 @@ addFeet (Feet f1) (Feet f2) =
 timesUnits : Int -> Feet -> Feet
 timesUnits n (Feet f) =
     Feet (n * f)
+
+
+maxFeet : Feet -> Feet -> Feet
+maxFeet (Feet f1) (Feet f2) =
+    Feet (max f1 f2)
