@@ -6,6 +6,7 @@ import Collision
 import Color
 import Coordinate exposing (Viewport)
 import Element exposing (Element)
+import Text exposing (defaultStyle)
 import Html exposing (Html)
 import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
@@ -425,17 +426,69 @@ positionAt viewport position element =
         Element.container width height (Element.bottomLeftAt x y) element
 
 
+faded : Element -> Element
+faded element =
+    element
+        |> Element.opacity 0.5
+
+
+wonText : String
+wonText =
+    """
+  The wolf takes in the twins and cares for them. The gods must destine
+  them for greatness!
+  """
+
+
+header : String -> Element
+header string =
+    string
+        |> Text.fromString
+        |> Text.style headerStyle
+        |> Element.centered
+
+
+standardText : String -> Element
+standardText string =
+    string
+        |> Text.fromString
+        |> Text.style textStyle
+        |> Element.centered
+
+
+headerStyle : Text.Style
+headerStyle =
+    { defaultStyle
+        | height = Just 55
+        , typeface = [ "Helvetica", "Arial", "sans-serif" ]
+    }
+
+
+textStyle : Text.Style
+textStyle =
+    { defaultStyle
+        | height = Just 25
+        , typeface = [ "Helvetica", "Arial", "sans-serif" ]
+    }
+
+
 view : Model -> Html a
 view model =
     case model of
         Playing state ->
             viewGameState state
+                |> Element.toHtml
 
         Lost state ->
             viewGameState state
+                |> Element.toHtml
 
         Won state ->
-            viewGameState state
+            [ viewGameState state |> faded
+            , [ header "You won!", standardText wonText ] |> Element.flow Element.down
+            ]
+                |> Element.layers
+                |> Element.toHtml
 
 
 viewNature : Viewport -> Element
@@ -453,7 +506,7 @@ viewNature viewport =
             ]
 
 
-viewGameState : GameState -> Html a
+viewGameState : GameState -> Element
 viewGameState state =
     let
         viewport =
@@ -487,7 +540,6 @@ viewGameState state =
                 (River.render state.river)
     in
         Element.layers [ nature, renderedRiver, boys, obstacles, wolves ]
-            |> Element.toHtml
 
 
 subscriptions : Model -> Sub Msg
