@@ -61,20 +61,29 @@ centerHorizontally element =
 
 winScreen : Element
 winScreen =
-    [ header "You win!", standardText winMessage ]
-        |> display
+    display
+        [ header "You win!"
+        , standardText winMessage
+        , standardText restartMessage
+        ]
 
 
 hitObstacleScreen : Element
 hitObstacleScreen =
-    [ header "You lost!", standardText hitObstacleMessage ]
-        |> display
+    display
+        [ header "You lost!"
+        , standardText hitObstacleMessage
+        , standardText restartMessage
+        ]
 
 
 strandedOnShoreScreen : Element
 strandedOnShoreScreen =
-    [ header "You lost!", standardText strandedOnShoreMessage ]
-        |> display
+    display
+        [ header "You lost!"
+        , standardText strandedOnShoreMessage
+        , standardText restartMessage
+        ]
 
 
 winMessage : String
@@ -100,3 +109,8 @@ strandedOnShoreMessage =
   Your basket washes up on shore. Unfortunately no one notices,
   sealing the twins' fate. Amulius' nefarious plan has succeeded.
   """
+
+
+restartMessage : String
+restartMessage =
+    "Click anywhere to play again..."

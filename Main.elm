@@ -10,6 +10,7 @@ import GameText
 import Html exposing (Html)
 import Keyboard
 import Measurement exposing (Feet(..), Pixels(..))
+import Mouse
 import Time exposing (Time)
 import Random
 import River exposing (River)
@@ -84,6 +85,7 @@ type Msg
     = Tick Time
     | Move YDirection
     | NewSection Section
+    | StartGame
 
 
 initialModel : Model
@@ -115,6 +117,25 @@ update msg model =
 
         NewSection section ->
             appendNewSection section model
+
+        StartGame ->
+            startGame model
+
+
+startGame : Model -> ( Model, Cmd a )
+startGame model =
+    case model of
+        Lost _ _ ->
+            Playing initialGameState
+                |> withNoCmd
+
+        Won _ ->
+            Playing initialGameState
+                |> withNoCmd
+
+        Playing _ ->
+            model
+                |> withNoCmd
 
 
 appendNewSection : Section -> Model -> ( Model, Cmd a )
@@ -521,10 +542,10 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     case model of
         Lost _ _ ->
-            Sub.none
+            Mouse.clicks (always StartGame)
 
         Won _ ->
-            Sub.none
+            Mouse.clicks (always StartGame)
 
         Playing _ ->
             Sub.batch
